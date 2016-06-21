@@ -12,8 +12,8 @@ namespace CameraPreviewSample.Droid.CustomRenderers
 
 
         private long FrameCount = 1;
-        public CameraPreview CameraPreview { get; set;}
-        public byte[] Buff { get; set;}
+        public CameraPreview CameraPreview { get; set; }
+        public byte[] Buff { get; set; }
 
         public void OnPreviewFrame(byte[] data, Android.Hardware.Camera camera) {
 

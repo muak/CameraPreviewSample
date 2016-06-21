@@ -11,54 +11,52 @@ namespace CameraPreviewSample.iOS.CustomRenderers
 {
 
     public class OutputRecorder : AVCaptureVideoDataOutputSampleBufferDelegate
-	{
-       
-		private UIImage GetImageFromSampleBuffer (CMSampleBuffer sampleBuffer)
-		{
+    {
 
-			// Get a pixel buffer from the sample buffer
-			using (var pixelBuffer = sampleBuffer.GetImageBuffer () as CVPixelBuffer) {
-				// Lock the base address
+        private UIImage GetImageFromSampleBuffer(CMSampleBuffer sampleBuffer) {
 
-				pixelBuffer.Lock (CVPixelBufferLock.None);
+            // Get a pixel buffer from the sample buffer
+            using (var pixelBuffer = sampleBuffer.GetImageBuffer() as CVPixelBuffer) {
+                // Lock the base address
 
-				// Prepare to decode buffer
-				var flags = CGBitmapFlags.PremultipliedFirst | CGBitmapFlags.ByteOrder32Little;
+                pixelBuffer.Lock(CVPixelBufferLock.None);
 
-				// Decode buffer - Create a new colorspace
-				using (var cs = CGColorSpace.CreateDeviceRGB ()) {
+                // Prepare to decode buffer
+                var flags = CGBitmapFlags.PremultipliedFirst | CGBitmapFlags.ByteOrder32Little;
 
-					// Create new context from buffer
-					using (var context = new CGBitmapContext (pixelBuffer.BaseAddress,
-											 pixelBuffer.Width,
-											 pixelBuffer.Height,
-											 8,
-											 pixelBuffer.BytesPerRow,
-											 cs,
-											 (CGImageAlphaInfo)flags)) {
+                // Decode buffer - Create a new colorspace
+                using (var cs = CGColorSpace.CreateDeviceRGB()) {
 
-						// Get the image from the context
-						using (var cgImage = context.ToImage ()) {
-							
-							// Unlock and return image
-							pixelBuffer.Unlock (CVPixelBufferLock.None);
-							return UIImage.FromImage (cgImage);
-						}
-					}
-				}
-			}
-		}
+                    // Create new context from buffer
+                    using (var context = new CGBitmapContext(pixelBuffer.BaseAddress,
+                                             pixelBuffer.Width,
+                                             pixelBuffer.Height,
+                                             8,
+                                             pixelBuffer.BytesPerRow,
+                                             cs,
+                                             (CGImageAlphaInfo)flags)) {
+
+                        // Get the image from the context
+                        using (var cgImage = context.ToImage()) {
+
+                            // Unlock and return image
+                            pixelBuffer.Unlock(CVPixelBufferLock.None);
+                            return UIImage.FromImage(cgImage);
+                        }
+                    }
+                }
+            }
+        }
 
         public CameraPreview Camera { get; set; }
         private long FrameCount = 1;
 
-		public override void DidOutputSampleBuffer (
-			AVCaptureOutput captureOutput, 
-			CMSampleBuffer sampleBuffer, 
-			AVCaptureConnection connection)
-		{
-			
-			try {
+        public override void DidOutputSampleBuffer(
+            AVCaptureOutput captureOutput,
+            CMSampleBuffer sampleBuffer,
+            AVCaptureConnection connection) {
+
+            try {
                 // ここでフレーム画像を取得していろいろしたり
                 //var image = GetImageFromSampleBuffer (sampleBuffer);
 
@@ -70,10 +68,11 @@ namespace CameraPreviewSample.iOS.CustomRenderers
                 //これがないと"Received memory warning." で落ちたり、画面の更新が止まったりする
                 GC.Collect();  //  "Received memory warning." 回避
 
-			} catch (Exception e) {
-				Console.WriteLine ("Error sampling buffer: {0}", e.Message);
-			}
-		}
-	}
+            }
+            catch (Exception e) {
+                Console.WriteLine("Error sampling buffer: {0}", e.Message);
+            }
+        }
+    }
 }
 

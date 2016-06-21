@@ -16,12 +16,12 @@ namespace CameraPreviewSample.Droid.CustomRenderers
     public class CameraPreviewRenderer : ViewRenderer<CameraPreview, DroidCameraPreview>
     {
         DroidCameraPreview cameraPreview;
-       
+
         protected override void OnElementChanged(ElementChangedEventArgs<CameraPreview> e) {
             base.OnElementChanged(e);
 
             if (Control == null) {
-                cameraPreview = new DroidCameraPreview(Context,e.NewElement);
+                cameraPreview = new DroidCameraPreview(Context, e.NewElement);
                 SetNativeControl(cameraPreview);
             }
 
@@ -31,30 +31,30 @@ namespace CameraPreviewSample.Droid.CustomRenderers
             }
         }
 
-		protected override void OnElementPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
-			base.OnElementPropertyChanged(sender, e);
-			if (this.Element == null || this.Control == null)
-				return;
+        protected override void OnElementPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
+            base.OnElementPropertyChanged(sender, e);
+            if (this.Element == null || this.Control == null)
+                return;
 
             // PCL側の変更をプラットフォームに反映
             if (e.PropertyName == nameof(Element.IsPreviewing)) {
-				Control.IsPreviewing = Element.IsPreviewing;
-			}
-		}
+                Control.IsPreviewing = Element.IsPreviewing;
+            }
+        }
 
         protected override void Dispose(bool disposing) {
             if (disposing) {
                 if (Control.Preview != null) {
                     Control.Release();
                 }
-               
-				MessagingCenter.Unsubscribe<LifeCyclePayload>(Control,"");
+
+                MessagingCenter.Unsubscribe<LifeCyclePayload>(Control, "");
             }
             base.Dispose(disposing);
         }
     }
 
-   
+
     public sealed class DroidCameraPreview : ViewGroup, ISurfaceHolderCallback
     {
         SurfaceView surfaceView;
@@ -65,34 +65,32 @@ namespace CameraPreviewSample.Droid.CustomRenderers
         Context context;
         byte[] Buff;
 
-		private PinchListener pinchlistener;
+        private PinchListener pinchlistener;
         private ScaleGestureDetector scaleGestureDetector;
-		private bool surfaceCreated;
+        private bool surfaceCreated;
 
         public CameraPreviewCallback PreviewCallback { get; set; }
         public CameraPreview FormsCameraPreview { get; set; }
 
-		bool _IsPreviewing;
-		public bool IsPreviewing {
-			get {
-				return _IsPreviewing;
-			}
-			set {
-				if (value) {
-					StartPreview();
-				}
-				else {
-					StopPreview();
-				}
-				_IsPreviewing = value;
-			}
-		}
+        bool _IsPreviewing;
+        public bool IsPreviewing {
+            get {
+                return _IsPreviewing;
+            }
+            set {
+                if (value) {
+                    StartPreview();
+                }
+                else {
+                    StopPreview();
+                }
+                _IsPreviewing = value;
+            }
+        }
 
-		public Camera Preview
-        {
+        public Camera Preview {
             get { return camera; }
-            set
-            {
+            set {
                 camera = value;
                 if (camera != null) {
                     supportedPreviewSizes = Preview.GetParameters().SupportedPreviewSizes;
@@ -101,9 +99,9 @@ namespace CameraPreviewSample.Droid.CustomRenderers
             }
         }
 
-		public DroidCameraPreview(Context context,CameraPreview formsCameraPreview)
+        public DroidCameraPreview(Context context, CameraPreview formsCameraPreview)
             : base(context) {
-			FormsCameraPreview = formsCameraPreview;
+            FormsCameraPreview = formsCameraPreview;
             surfaceView = new SurfaceView(context);
             AddView(surfaceView);
 
@@ -113,22 +111,22 @@ namespace CameraPreviewSample.Droid.CustomRenderers
 
             this.context = context;
 
-			MessagingCenter.Subscribe<LifeCyclePayload>(this, "", (p) => {
-				switch (p.Status) {
-					case LifeCycle.OnSleep:
+            MessagingCenter.Subscribe<LifeCyclePayload>(this, "", (p) => {
+                switch (p.Status) {
+                    case LifeCycle.OnSleep:
                         if (surfaceCreated) {
                             //Sleepの時にSurfaceViewが生成されていればリソース解放
                             Release();
                         }
-						break;
-					case LifeCycle.OnResume:
-						if (surfaceCreated) {
-                            //Resumeの時にSurfaceViewが生成されていればリソース初期化
-							Initialize ();                         
-						}
                         break;
-				}
-			});
+                    case LifeCycle.OnResume:
+                        if (surfaceCreated) {
+                            //Resumeの時にSurfaceViewが生成されていればリソース初期化
+                            Initialize();
+                        }
+                        break;
+                }
+            });
 
         }
 
@@ -167,134 +165,129 @@ namespace CameraPreviewSample.Droid.CustomRenderers
             return scaleGestureDetector.OnTouchEvent(e);
         }
 
-		public void SurfaceCreated(ISurfaceHolder holder) {
-			surfaceCreated = true;
+        public void SurfaceCreated(ISurfaceHolder holder) {
+            surfaceCreated = true;
         }
 
-		public void SurfaceChanged (ISurfaceHolder holder, Android.Graphics.Format format, int width, int height)
-		{
-			if (Preview == null) {
-				Initialize ();
-			}
-		}
+        public void SurfaceChanged(ISurfaceHolder holder, Android.Graphics.Format format, int width, int height) {
+            if (Preview == null) {
+                Initialize();
+            }
+        }
 
-		public void SurfaceDestroyed(ISurfaceHolder holder) {
+        public void SurfaceDestroyed(ISurfaceHolder holder) {
             if (Preview != null) {
                 Release();
             }
-			surfaceCreated = false;
+            surfaceCreated = false;
         }
 
-		public void Release ()
-		{
-			
-			Preview.StopPreview ();
-			PreviewCallback.Dispose ();
-			Preview.AddCallbackBuffer (null);
-			Preview.SetPreviewCallbackWithBuffer (null);
-			pinchlistener.Dispose();
-			scaleGestureDetector.Dispose();
+        public void Release() {
 
-			Preview.Release();
-			Preview = null;
-           
-		}
+            Preview.StopPreview();
+            PreviewCallback.Dispose();
+            Preview.AddCallbackBuffer(null);
+            Preview.SetPreviewCallbackWithBuffer(null);
+            pinchlistener.Dispose();
+            scaleGestureDetector.Dispose();
 
-		public void Initialize ()
-		{
-			
-			Preview = Camera.Open ((int)FormsCameraPreview.Camera);
+            Preview.Release();
+            Preview = null;
 
-			//Portrait固定
-			Preview.SetDisplayOrientation (90);
+        }
 
-			var parameters = Preview.GetParameters ();
+        public void Initialize() {
+
+            Preview = Camera.Open((int)FormsCameraPreview.Camera);
+
+            //Portrait固定
+            Preview.SetDisplayOrientation(90);
+
+            var parameters = Preview.GetParameters();
 
 
-			//プレビューサイズ設定
-			if (supportedPreviewSizes != null) {
-				previewSize = GetOptimalPreviewSize (supportedPreviewSizes, surfaceView.Width, surfaceView.Height);
-			}
-			parameters.SetPreviewSize (previewSize.Width, previewSize.Height);
+            //プレビューサイズ設定
+            if (supportedPreviewSizes != null) {
+                previewSize = GetOptimalPreviewSize(supportedPreviewSizes, surfaceView.Width, surfaceView.Height);
+            }
+            parameters.SetPreviewSize(previewSize.Width, previewSize.Height);
 
-			//フレームレート設定
-			parameters.SetPreviewFpsRange (10000, 24000);
+            //フレームレート設定
+            parameters.SetPreviewFpsRange(10000, 24000);
 
 
-			Preview.SetParameters (parameters);
-			RequestLayout ();
+            Preview.SetParameters(parameters);
+            RequestLayout();
 
             //フレーム処理用バッファの作成
-			int size = previewSize.Width * previewSize.Height * Android.Graphics.ImageFormat.GetBitsPerPixel (Android.Graphics.ImageFormat.Nv21) / 8;
-            Buff = new byte [size];
+            int size = previewSize.Width * previewSize.Height * Android.Graphics.ImageFormat.GetBitsPerPixel(Android.Graphics.ImageFormat.Nv21) / 8;
+            Buff = new byte[size];
             //フレーム処理用のコールバック生成
-			PreviewCallback = new CameraPreviewCallback { CameraPreview = FormsCameraPreview, Buff = Buff };
+            PreviewCallback = new CameraPreviewCallback { CameraPreview = FormsCameraPreview, Buff = Buff };
 
-			Preview.SetPreviewCallbackWithBuffer (PreviewCallback);
-			Preview.AddCallbackBuffer (Buff);
+            Preview.SetPreviewCallbackWithBuffer(PreviewCallback);
+            Preview.AddCallbackBuffer(Buff);
 
             //ピンチジェスチャー登録処理
-			pinchlistener = new PinchListener { camera = Preview, PreviewCallback = PreviewCallback, buff = Buff };
-			scaleGestureDetector = new ScaleGestureDetector (context, pinchlistener);
+            pinchlistener = new PinchListener { camera = Preview, PreviewCallback = PreviewCallback, buff = Buff };
+            scaleGestureDetector = new ScaleGestureDetector(context, pinchlistener);
 
-			Preview.SetPreviewDisplay (holder);
+            Preview.SetPreviewDisplay(holder);
 
             if (IsPreviewing) {
                 StartPreview();
             }
 
-		}
+        }
 
-		class PinchListener : ScaleGestureDetector.SimpleOnScaleGestureListener
-		{
-			public Camera camera { get; set; }
-			public byte [] buff { get; set; }
-			public CameraPreviewCallback PreviewCallback { get; set; }
+        class PinchListener : ScaleGestureDetector.SimpleOnScaleGestureListener
+        {
+            public Camera camera { get; set; }
+            public byte[] buff { get; set; }
+            public CameraPreviewCallback PreviewCallback { get; set; }
 
-			public override bool OnScale (ScaleGestureDetector detector)
-			{
+            public override bool OnScale(ScaleGestureDetector detector) {
 
-				var param = camera.GetParameters ();
+                var param = camera.GetParameters();
 
-				if (Math.Abs (detector.ScaleFactor - 1.0f) < 0.01f) {
-					return base.OnScale (detector);
-				}
-				if (detector.ScaleFactor > 1.0) {
-					param.Zoom += (int)Math.Round (2.0 * detector.ScaleFactor, 0);
+                if (Math.Abs(detector.ScaleFactor - 1.0f) < 0.01f) {
+                    return base.OnScale(detector);
+                }
+                if (detector.ScaleFactor > 1.0) {
+                    param.Zoom += (int)Math.Round(2.0 * detector.ScaleFactor, 0);
 
-					if (param.Zoom == 0) {
-						param.Zoom = 2;
-					}
-					if (param.Zoom > param.MaxZoom) {
-						param.Zoom = param.MaxZoom;
-					}
-				} else {
-					//param.Zoom -= 3;
-					param.Zoom -= (int)Math.Round (4.0 * detector.ScaleFactor, 0);
-					if (param.Zoom < 0) {
-						param.Zoom = 0;
-					}
-				}
+                    if (param.Zoom == 0) {
+                        param.Zoom = 2;
+                    }
+                    if (param.Zoom > param.MaxZoom) {
+                        param.Zoom = param.MaxZoom;
+                    }
+                }
+                else {
+                    //param.Zoom -= 3;
+                    param.Zoom -= (int)Math.Round(4.0 * detector.ScaleFactor, 0);
+                    if (param.Zoom < 0) {
+                        param.Zoom = 0;
+                    }
+                }
 
-				camera.SetParameters (param);
+                camera.SetParameters(param);
 
-				return base.OnScale (detector);
-			}
-			public override bool OnScaleBegin (ScaleGestureDetector detector)
-			{
-				camera.AddCallbackBuffer (null);
-				camera.SetPreviewCallbackWithBuffer (null);
-				return base.OnScaleBegin (detector);
-			}
-			public override void OnScaleEnd (ScaleGestureDetector detector)
-			{
-				camera.SetPreviewCallbackWithBuffer (PreviewCallback);
-				camera.AddCallbackBuffer (buff);
-				base.OnScaleEnd (detector);
-			}
-		}
+                return base.OnScale(detector);
+            }
+            public override bool OnScaleBegin(ScaleGestureDetector detector) {
+                camera.AddCallbackBuffer(null);
+                camera.SetPreviewCallbackWithBuffer(null);
+                return base.OnScaleBegin(detector);
+            }
+            public override void OnScaleEnd(ScaleGestureDetector detector) {
+                camera.SetPreviewCallbackWithBuffer(PreviewCallback);
+                camera.AddCallbackBuffer(buff);
+                base.OnScaleEnd(detector);
+            }
+        }
 
-		private Camera.Size GetOptimalPreviewSize(IList<Camera.Size> sizes, int w, int h) {
+        private Camera.Size GetOptimalPreviewSize(IList<Camera.Size> sizes, int w, int h) {
             double AspectTolerance = 0.1;
             double targetRatio = (double)w / h;
 
