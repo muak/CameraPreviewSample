@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage 
+		xmlns="http://xamarin.com/schemas/2014/forms" 
+		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+		xmlns:local="clr-namespace:CameraPreviewSample" 
+		x:Class="CameraPreviewSample.CameraPreviewSamplePage"
+		xmlns:my="clr-namespace:CameraPreviewSample.CustomRenderers;assembly=CameraPreviewSample"
+		>
+	<StackLayout Spacing="0">
+  		<AbsoluteLayout HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+  			<my:CameraPreview IsPreviewing="true" x:Name="CameraPreview"
+				Camera="Rear" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,0,1,1" />
+
+			<Label  AbsoluteLayout.LayoutFlags="PositionProportional" 
+				    AbsoluteLayout.LayoutBounds="0,0,AutoSize,AutoSize" 
+					BindingContext="{x:Reference CameraPreview}"
+				    Text="{Binding Hoge,StringFormat='FrameCount:{0:G}'}" TextColor="#70FFFFFF" />
+			
+  		</AbsoluteLayout>
+  		<StackLayout Orientation="Horizontal" Padding="4,4,4,4" Margin="0" VerticalOptions="End" HeightRequest="48" BackgroundColor="#50CCCCCC">
+			<Button HorizontalOptions="Center"  VerticalOptions="CenterAndExpand" Text="Next" HeightRequest="40" Clicked="Handle_Clicked" />
+  		</StackLayout>
+
+  	</StackLayout>
+
+</ContentPage>
